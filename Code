@@ -1,0 +1,193 @@
+// Components used: A sound sensor, an RGB LED, and an OLED display.
+// Note: Building the physical lamp housing requires a bit of creativity!
+
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+#define OLED_RESET -1
+#define OLED_ADDRESS 0x3C
+
+Adafruit_SSD1306 display(
+  SCREEN_WIDTH,
+  SCREEN_HEIGHT,
+  &Wire,
+  OLED_RESET
+);
+
+const int redLED = 9;
+const int greenLED = 3;
+const int blueLED = 5;
+
+const int soundSensor = A0;
+
+int lastSoundState = LOW;
+int currentSoundState;
+
+int currentColor = 0;
+
+void setColor(int red, int green, int blue)
+{
+  analogWrite(redLED, red);
+  analogWrite(greenLED, green);
+  analogWrite(blueLED, blue);
+}
+
+void showColor(int color)
+{
+  switch (color)
+  {
+    case 0:
+      setColor(255, 0, 0);
+      Serial.println("RED");
+      break;
+
+    case 1:
+      setColor(0, 255, 0);
+      Serial.println("GREEN");
+      break;
+
+    case 2:
+      setColor(0, 0, 255);
+      Serial.println("BLUE");
+      break;
+
+    case 3:
+      setColor(255, 255, 0);
+      Serial.println("YELLOW");
+      break;
+
+    case 4:
+      setColor(0, 255, 255);
+      Serial.println("CYAN");
+      break;
+
+    case 5:
+      setColor(255, 0, 255);
+      Serial.println("MAGENTA");
+      break;
+
+    case 6:
+      setColor(255, 100, 0);
+      Serial.println("ORANGE");
+      break;
+
+    case 7:
+      setColor(255, 255, 255);
+      Serial.println("WHITE");
+      break;
+  }
+}
+
+void updateOLED()
+{
+  display.clearDisplay();
+
+  const int barX = 3;
+  const int barY = 7;
+
+  const int barWidth = 122;
+  const int barHeight = 50;
+
+  display.drawRect(
+    barX,
+    barY,
+    barWidth,
+    barHeight,
+    SSD1306_WHITE
+  );
+
+  int level = currentColor + 1;
+
+  int fillWidth = map(
+    level,
+    1,
+    8,
+    13,
+    116
+  );
+
+  display.fillRect(
+    barX + 2,
+    barY + 2,
+    fillWidth,
+    barHeight - 4,
+    SSD1306_WHITE
+  );
+
+  display.setTextSize(3);
+
+  int numberWidth = 18;
+  int numberX = 55;
+  int numberY = 20;
+
+  display.fillRect(
+    numberX - 2,
+    numberY - 2,
+    numberWidth + 4,
+    28,
+    SSD1306_BLACK
+  );
+
+  display.setTextColor(SSD1306_WHITE);
+
+  display.setCursor(
+    numberX,
+    numberY
+  );
+
+  display.println(level);
+
+  display.display();
+}
+
+void setup()
+{
+  Serial.begin(9600);
+
+  pinMode(redLED, OUTPUT);
+  pinMode(greenLED, OUTPUT);
+  pinMode(blueLED, OUTPUT);
+
+  pinMode(soundSensor, INPUT);
+
+  if (!display.begin(
+        SSD1306_SWITCHCAPVCC,
+        OLED_ADDRESS))
+  {
+    while (true);
+  }
+
+  showColor(currentColor);
+
+  updateOLED();
+}
+
+void loop()
+{
+  currentSoundState = digitalRead(soundSensor);
+
+  if (
+    lastSoundState == LOW &&
+    currentSoundState == HIGH
+  )
+  {
+    currentColor++;
+
+    if (currentColor >= 8)
+    {
+      currentColor = 0;
+    }
+
+    showColor(currentColor);
+
+    updateOLED();
+
+    delay(300);
+  }
+
+  lastSoundState = currentSoundState;
+}
