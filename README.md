@@ -10,6 +10,8 @@ I built my lamp with stuff I had lying around the house, and I think that was th
 
 <img width="1280" height="720" alt="Lamp4" src="https://github.com/user-attachments/assets/fb2c5372-0adc-432c-832d-116309d7fb30" />
 
+![Lamp Demo](./Lamp_Arduino.gif)
+
 
 
 
